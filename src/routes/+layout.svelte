@@ -1,57 +1,45 @@
-<script lang="ts">
-	import Header from './Header.svelte';
-	import '../app.css';
+﻿<script lang="ts">
+  import '../styles/globals.css'
+  import { supabase } from '$lib/supabaseClient'
+  import { signOut } from '$lib/auth'
+  import { onMount } from 'svelte'
 
-	let { children } = $props();
+  let session = null
+
+  onMount(async () => {
+    const { data } = await supabase.auth.getSession()
+    session = data.session
+  })
+
+  supabase.auth.onAuthStateChange((_, _session) => {
+    session = _session
+  })
+
+  const handleLogout = async () => {
+    await signOut()
+    session = null
+  }
 </script>
 
-<div class="app">
-	<Header />
+<main class="min-h-screen bg-gray-50 text-gray-900 font-sans flex flex-col">
+  <nav class="flex justify-between items-center px-6 py-3 shadow-sm bg-white border-b border-gray-200">
+    <h1 class="text-lg font-semibold text-gray-700">PsyTrackSvelte</h1>
+    {#if session}
+      <div class="flex items-center space-x-4">
+        <p class="text-sm text-gray-600">{session.user.email}</p>
+        <button
+          on:click={handleLogout}
+          class="text-sm text-blue-600 hover:underline"
+        >
+          Sair
+        </button>
+      </div>
+    {/if}
+  </nav>
 
-	<main>
-		{@render children()}
-	</main>
+  <section class="flex-1">
+    <slot />
+  </section>
+</main>
 
-	<footer>
-		<p>
-			visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to learn about SvelteKit
-		</p>
-	</footer>
-</div>
 
-<style>
-	.app {
-		display: flex;
-		flex-direction: column;
-		min-height: 100vh;
-	}
-
-	main {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		padding: 1rem;
-		width: 100%;
-		max-width: 64rem;
-		margin: 0 auto;
-		box-sizing: border-box;
-	}
-
-	footer {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		padding: 12px;
-	}
-
-	footer a {
-		font-weight: bold;
-	}
-
-	@media (min-width: 480px) {
-		footer {
-			padding: 12px 0;
-		}
-	}
-</style>
